@@ -1,0 +1,62 @@
+# config.yaml - Detector Configuration
+# Modify these settings to tune the detection sensitivity.
+
+# ─────────────────────────────────────────
+# Network Interface Settings
+# ─────────────────────────────────────────
+
+# Set to null to auto-detect the default interface
+# Examples: "eth0", "wlan0", "lo", "Wi-Fi", "Ethernet"
+interface: null
+
+# BPF filter for Scapy sniffer (captures ICMP and DNS/UDP traffic)
+bpf_filter: "icmp or udp port 53"
+
+
+# ─────────────────────────────────────────
+# Detection Thresholds
+# ─────────────────────────────────────────
+
+# ICMP payload length (bytes) above which a packet is considered suspicious.
+# Standard ping payload is 32-56 bytes. Our covert packets will be larger.
+icmp_payload_threshold: 20
+
+# Minimum Shannon entropy score to flag a payload as high-entropy (possible encoded data).
+# Score range: 0.0 (uniform/repetitive) to 1.0 (maximum randomness).
+# Base64 encoded data typically has entropy > 0.85
+entropy_threshold: 0.82
+
+# Number of DNS queries to the SAME domain within the time window before flagging
+dns_query_count_threshold: 3
+
+# Time window in seconds for counting repeated DNS queries to same domain
+dns_time_window: 30
+
+# Keywords in DNS domain labels that suggest encoding / covert channel use
+dns_suspicious_labels:
+  - "covertchannel"
+  - "tunnel"
+  - "exfil"
+  - "c2"
+  - "cmd"
+
+
+# ─────────────────────────────────────────
+# Logging Settings
+# ─────────────────────────────────────────
+
+log_file: "logs/alerts.log"
+
+# Log severity levels: DEBUG, INFO, WARNING, ALERT, CRITICAL
+log_level: "ALERT"
+
+
+# ─────────────────────────────────────────
+# Display Settings
+# ─────────────────────────────────────────
+
+# Show ALL packets (including non-suspicious) in the console
+show_all_packets: false
+
+# Show decoded payload content when possible
+show_decoded_payload: true
