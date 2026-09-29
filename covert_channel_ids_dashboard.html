@@ -1,0 +1,603 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@400;500;600;700&display=swap');
+
+:root {
+  --bg: #0a0c10;
+  --surface: #0f1218;
+  --card: #13171f;
+  --border: #1e2530;
+  --border2: #252d3a;
+  --text: #c8d4e0;
+  --muted: #556070;
+  --hint: #33404d;
+  --green: #00e5a0;
+  --green-dim: rgba(0,229,160,0.12);
+  --red: #ff4655;
+  --red-dim: rgba(255,70,85,0.12);
+  --amber: #f5a623;
+  --amber-dim: rgba(245,166,35,0.12);
+  --blue: #4da8ff;
+  --blue-dim: rgba(77,168,255,0.10);
+  --purple: #b06cff;
+  --purple-dim: rgba(176,108,255,0.12);
+  --teal: #00d4cc;
+  --teal-dim: rgba(0,212,204,0.10);
+  --mono: 'Share Tech Mono', monospace;
+  --sans: 'Rajdhani', sans-serif;
+}
+
+* { box-sizing:border-box; margin:0; padding:0; }
+body { background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; overflow-x:hidden; }
+
+/* scan-line overlay */
+body::before {
+  content:''; position:fixed; inset:0; pointer-events:none; z-index:9999;
+  background:repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.03) 2px, rgba(0,0,0,0.03) 4px);
+}
+
+#app { padding:16px 18px 32px; max-width:1400px; margin:0 auto; }
+
+/* ── Header ── */
+.header { display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; border-bottom:1px solid var(--border); padding-bottom:14px; }
+.header-left { display:flex; align-items:center; gap:14px; }
+.shield { width:38px; height:38px; position:relative; }
+.shield svg { width:100%; height:100%; }
+.title-block { }
+.title { font-size:20px; font-weight:700; letter-spacing:0.08em; text-transform:uppercase; color:#e8f0f8; }
+.subtitle { font-size:11px; font-family:var(--mono); color:var(--muted); margin-top:2px; letter-spacing:0.05em; }
+.header-right { display:flex; align-items:center; gap:16px; }
+.live-badge { display:flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; color:var(--green); border:1px solid rgba(0,229,160,0.25); border-radius:4px; padding:4px 10px; }
+.live-dot { width:7px; height:7px; border-radius:50%; background:var(--green); box-shadow:0 0 8px var(--green); animation:pulse 1.5s ease-in-out infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+.clock { font-family:var(--mono); font-size:12px; color:var(--muted); }
+.iface-badge { font-family:var(--mono); font-size:10px; color:var(--blue); border:1px solid rgba(77,168,255,0.2); border-radius:3px; padding:3px 8px; }
+
+/* ── Metrics ── */
+.metrics { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
+.metric { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:13px 15px; position:relative; overflow:hidden; cursor:default; transition:border-color 0.2s; }
+.metric:hover { border-color:var(--border2); }
+.metric::before { content:''; position:absolute; inset:0; pointer-events:none; }
+.m-icmp::before { background:linear-gradient(135deg,rgba(77,168,255,0.06),transparent 60%); }
+.m-dns::before  { background:linear-gradient(135deg,rgba(0,212,204,0.06),transparent 60%); }
+.m-alert::before { background:linear-gradient(135deg,rgba(255,70,85,0.08),transparent 60%); }
+.m-entropy::before { background:linear-gradient(135deg,rgba(176,108,255,0.06),transparent 60%); }
+.m-decoded::before { background:linear-gradient(135deg,rgba(0,229,160,0.06),transparent 60%); }
+.metric-label { font-size:10px; font-family:var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-bottom:8px; }
+.metric-val { font-size:28px; font-weight:700; line-height:1; letter-spacing:-0.02em; }
+.metric-sub { font-size:10px; color:var(--muted); margin-top:5px; font-family:var(--mono); }
+.c-blue{color:var(--blue)} .c-teal{color:var(--teal)} .c-red{color:var(--red)} .c-purple{color:var(--purple)} .c-green{color:var(--green)}
+
+/* ── 3-col grid ── */
+.main-grid { display:grid; grid-template-columns:1fr 340px; gap:12px; margin-bottom:12px; }
+
+/* ── Panel ── */
+.panel { background:var(--card); border:1px solid var(--border); border-radius:6px; padding:15px; }
+.panel-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:13px; }
+.panel-title { font-size:11px; font-family:var(--mono); color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; }
+.panel-tag { font-size:10px; font-family:var(--mono); color:var(--hint); }
+
+/* ── Search ── */
+.search-row { display:flex; gap:8px; margin-bottom:10px; flex-wrap:wrap; }
+.search-row input, .search-row select {
+  font-family:var(--mono); font-size:12px; padding:7px 11px;
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:4px; color:var(--text); outline:none; transition:border-color 0.15s;
+}
+.search-row input { flex:1; min-width:160px; }
+.search-row input::placeholder { color:var(--hint); }
+.search-row input:focus,.search-row select:focus { border-color:var(--blue); }
+.search-row select option { background:#1a2030; }
+.btn { font-family:var(--mono); font-size:11px; padding:7px 14px; border-radius:4px; border:1px solid var(--border); background:var(--surface); color:var(--text); cursor:pointer; letter-spacing:0.04em; transition:all 0.15s; }
+.btn:hover { border-color:var(--border2); background:var(--border); }
+.btn-go { background:rgba(77,168,255,0.12); border-color:rgba(77,168,255,0.35); color:var(--blue); }
+.btn-go:hover { background:rgba(77,168,255,0.2); }
+
+/* ── Log table ── */
+.table-wrap { overflow-x:auto; border:1px solid var(--border); border-radius:4px; }
+table { width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
+thead th { background:var(--surface); color:var(--muted); font-family:var(--mono); font-size:10px; font-weight:400; padding:8px 10px; text-align:left; border-bottom:1px solid var(--border); text-transform:uppercase; letter-spacing:0.06em; cursor:pointer; white-space:nowrap; user-select:none; }
+thead th:hover { color:var(--text); }
+tbody tr { border-bottom:1px solid var(--border); transition:background 0.1s; }
+tbody tr:last-child { border:none; }
+tbody tr:hover { background:rgba(255,255,255,0.025); }
+tbody td { padding:7px 10px; font-family:var(--mono); font-size:11px; color:var(--text); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; vertical-align:middle; }
+
+.sev-tag { display:inline-block; font-size:9px; font-weight:600; padding:2px 7px; border-radius:3px; text-transform:uppercase; letter-spacing:0.05em; }
+.sev-alert    { background:var(--red-dim); color:var(--red); border:1px solid rgba(255,70,85,0.25); }
+.sev-warning  { background:var(--amber-dim); color:var(--amber); border:1px solid rgba(245,166,35,0.25); }
+.sev-info     { background:var(--blue-dim); color:var(--blue); border:1px solid rgba(77,168,255,0.2); }
+.sev-critical { background:rgba(255,70,85,0.2); color:#ff8899; border:1px solid rgba(255,70,85,0.4); }
+
+.proto-tag { display:inline-block; font-size:9px; padding:2px 6px; border-radius:3px; font-weight:600; }
+.proto-icmp { background:var(--blue-dim); color:var(--blue); }
+.proto-dns  { background:var(--teal-dim); color:var(--teal); }
+
+.decoded-cell { color:var(--green); max-width:140px; }
+.detail-cell  { color:var(--muted); max-width:200px; }
+
+.pag { display:flex; align-items:center; justify-content:space-between; margin-top:10px; }
+.pag-info { font-family:var(--mono); font-size:10px; color:var(--muted); }
+.pag-btns { display:flex; gap:4px; }
+.pag-btn { font-family:var(--mono); font-size:11px; padding:3px 9px; border-radius:3px; border:1px solid var(--border); background:var(--surface); color:var(--muted); cursor:pointer; }
+.pag-btn.active { background:rgba(77,168,255,0.15); border-color:rgba(77,168,255,0.4); color:var(--blue); }
+.pag-btn:hover:not(.active) { background:var(--border); }
+
+/* ── Alert feed ── */
+.alert-feed { display:flex; flex-direction:column; gap:7px; max-height:400px; overflow-y:auto; }
+.alert-feed::-webkit-scrollbar { width:3px; } .alert-feed::-webkit-scrollbar-thumb { background:var(--border2); border-radius:2px; }
+.alert-item { background:var(--surface); border:1px solid var(--border); border-radius:5px; padding:10px 12px; border-left:3px solid var(--border); animation:slideIn 0.3s ease; }
+@keyframes slideIn { from{opacity:0;transform:translateX(8px)} to{opacity:1;transform:none} }
+.alert-item.sev-alert    { border-left-color:var(--red); }
+.alert-item.sev-warning  { border-left-color:var(--amber); }
+.alert-item.sev-info     { border-left-color:var(--blue); }
+.alert-item.sev-critical { border-left-color:#ff8899; }
+.ai-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:5px; }
+.ai-proto { font-size:10px; font-family:var(--mono); }
+.ai-time  { font-size:10px; font-family:var(--mono); color:var(--hint); }
+.ai-reason { font-size:11px; font-family:var(--mono); color:var(--text); margin-bottom:4px; line-height:1.4; }
+.ai-route  { font-size:10px; color:var(--muted); }
+.ai-decoded { font-size:10px; font-family:var(--mono); color:var(--green); margin-top:4px; }
+
+/* ── Bottom grid ── */
+.bottom-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; }
+
+/* ── Entropy gauge ── */
+.entropy-list { display:flex; flex-direction:column; gap:8px; }
+.ent-row { display:flex; align-items:center; gap:8px; }
+.ent-label { font-family:var(--mono); font-size:10px; color:var(--muted); width:90px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.ent-bar-bg { flex:1; height:6px; background:var(--surface); border-radius:3px; overflow:hidden; }
+.ent-bar-fill { height:100%; border-radius:3px; transition:width 0.8s cubic-bezier(0.4,0,0.2,1); }
+.ent-val { font-family:var(--mono); font-size:10px; color:var(--muted); width:36px; text-align:right; }
+
+/* ── Detection checks ── */
+.checks-grid { display:grid; grid-template-columns:1fr 1fr; gap:7px; }
+.check-item { background:var(--surface); border:1px solid var(--border); border-radius:4px; padding:9px 11px; }
+.check-name { font-size:10px; font-family:var(--mono); color:var(--muted); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.05em; }
+.check-val  { font-size:16px; font-weight:700; }
+.check-sub  { font-size:9px; color:var(--hint); font-family:var(--mono); margin-top:2px; }
+
+/* ── Config panel ── */
+.config-list { display:flex; flex-direction:column; gap:6px; }
+.cfg-row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--border); }
+.cfg-row:last-child { border:none; }
+.cfg-key { font-family:var(--mono); font-size:10px; color:var(--muted); }
+.cfg-val { font-family:var(--mono); font-size:11px; color:var(--blue); }
+
+/* ── Chart canvas ── */
+.chart-wrap { position:relative; height:160px; }
+
+/* no-results */
+#no-results { text-align:center; padding:28px; color:var(--muted); font-family:var(--mono); font-size:12px; display:none; }
+
+/* ── Session separator ── */
+.session-sep { display:flex; align-items:center; gap:8px; margin:8px 0 4px; }
+.sep-line { flex:1; height:1px; background:var(--border); }
+.sep-label { font-family:var(--mono); font-size:9px; color:var(--hint); white-space:nowrap; }
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="shield">
+      <svg viewBox="0 0 38 44" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M19 2L3 9v14c0 10.5 6.8 18.5 16 21 9.2-2.5 16-10.5 16-21V9L19 2z" fill="rgba(77,168,255,0.12)" stroke="rgba(77,168,255,0.5)" stroke-width="1.5"/>
+        <path d="M19 8L8 12.5v9c0 6.5 4.3 11.5 11 13.5 6.7-2 11-8 11-13.5v-9L19 8z" fill="rgba(77,168,255,0.08)" stroke="rgba(77,168,255,0.3)" stroke-width="1"/>
+        <circle cx="19" cy="22" r="4" fill="none" stroke="var(--blue)" stroke-width="1.5"/>
+        <line x1="19" y1="16" x2="19" y2="19" stroke="var(--blue)" stroke-width="1.5"/>
+        <line x1="19" y1="25" x2="19" y2="28" stroke="var(--blue)" stroke-width="1.5"/>
+        <line x1="13" y1="22" x2="16" y2="22" stroke="var(--blue)" stroke-width="1.5"/>
+        <line x1="22" y1="22" x2="25" y2="22" stroke="var(--blue)" stroke-width="1.5"/>
+      </svg>
+    </div>
+    <div class="title-block">
+      <div class="title">Covert Channel Detector</div>
+      <div class="subtitle">ICMP Payload Analysis · DNS Tunneling Detection · Shannon Entropy Engine</div>
+    </div>
+  </div>
+  <div class="header-right">
+    <span class="iface-badge" id="ifaceTag">BPF: icmp or udp port 53</span>
+    <div class="live-badge"><div class="live-dot"></div>LIVE</div>
+    <div class="clock" id="clock">--:--:--</div>
+  </div>
+</div>
+
+<!-- METRICS -->
+<div class="metrics">
+  <div class="metric m-icmp">
+    <div class="metric-label">ICMP Alerts</div>
+    <div class="metric-val c-blue" id="m-icmp">0</div>
+    <div class="metric-sub">ICMP_ID=0xBEEF detected</div>
+  </div>
+  <div class="metric m-dns">
+    <div class="metric-label">DNS Alerts</div>
+    <div class="metric-val c-teal" id="m-dns">0</div>
+    <div class="metric-sub">tunneling / encoded labels</div>
+  </div>
+  <div class="metric m-alert">
+    <div class="metric-label">Total Alerts</div>
+    <div class="metric-val c-red" id="m-total">0</div>
+    <div class="metric-sub">all severity levels</div>
+  </div>
+  <div class="metric m-entropy">
+    <div class="metric-label">High Entropy</div>
+    <div class="metric-val c-purple" id="m-entropy">0</div>
+    <div class="metric-sub">entropy &gt; 3.5 bits</div>
+  </div>
+  <div class="metric m-decoded">
+    <div class="metric-label">Decoded Msgs</div>
+    <div class="metric-val c-green" id="m-decoded">0</div>
+    <div class="metric-sub">base64 payloads recovered</div>
+  </div>
+</div>
+
+<!-- MAIN GRID -->
+<div class="main-grid">
+  <!-- LEFT: log table -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Alert Log — alerts.log</span>
+      <span class="panel-tag" id="log-count">0 entries</span>
+    </div>
+
+    <!-- search -->
+    <div class="search-row">
+      <input type="text" id="searchInput" placeholder="Search IP, reason, decoded payload, domain..." />
+      <select id="filtSev">
+        <option value="">All severity</option>
+        <option>ALERT</option><option>WARNING</option><option>INFO</option><option>CRITICAL</option>
+      </select>
+      <select id="filtProto">
+        <option value="">All proto</option>
+        <option>ICMP</option><option>DNS</option>
+      </select>
+      <select id="filtReason">
+        <option value="">All checks</option>
+        <option value="Signature">0xBEEF Signature</option>
+        <option value="Encoded Payload">Encoded Payload</option>
+        <option value="Payload">Large Payload</option>
+        <option value="Keyword">DNS Keyword</option>
+        <option value="Subdomain">Encoded Subdomain</option>
+        <option value="Frequency">Query Frequency</option>
+      </select>
+      <button class="btn btn-go" onclick="applyFilters()">Search</button>
+      <button class="btn" onclick="clearFilters()">Clear</button>
+    </div>
+
+    <!-- table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:100px" onclick="sortBy('ts')">Timestamp</th>
+            <th style="width:60px" onclick="sortBy('sev')">Sev</th>
+            <th style="width:46px" onclick="sortBy('proto')">Proto</th>
+            <th style="width:108px" onclick="sortBy('src')">Src IP</th>
+            <th style="width:108px" onclick="sortBy('dst')">Dst IP</th>
+            <th style="width:auto" onclick="sortBy('reason')">Reason / Check</th>
+            <th style="width:120px" class="decoded-cell">Decoded</th>
+          </tr>
+        </thead>
+        <tbody id="logBody"></tbody>
+      </table>
+      <div id="no-results">No log entries match your filters.</div>
+    </div>
+    <div class="pag">
+      <span class="pag-info" id="pag-info">—</span>
+      <div class="pag-btns" id="pagBtns"></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: live alert feed -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Live Alert Feed</span>
+      <span class="panel-tag" id="feed-count">0 alerts</span>
+    </div>
+    <div class="alert-feed" id="alertFeed"></div>
+  </div>
+</div>
+
+<!-- BOTTOM GRID -->
+<div class="bottom-grid">
+
+  <!-- Entropy analysis -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Entropy Analysis</span>
+      <span class="panel-tag">threshold: 3.5 bits</span>
+    </div>
+    <div class="entropy-list" id="entropyList"></div>
+  </div>
+
+  <!-- Detection check breakdown -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">Detection Checks Fired</span>
+      <span class="panel-tag">6 methods active</span>
+    </div>
+    <div class="checks-grid" id="checksGrid"></div>
+  </div>
+
+  <!-- Active config -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-title">config.yaml — Active</span>
+      <span class="panel-tag">detector settings</span>
+    </div>
+    <div class="config-list">
+      <div class="cfg-row"><span class="cfg-key">icmp_payload_threshold</span><span class="cfg-val">20 bytes</span></div>
+      <div class="cfg-row"><span class="cfg-key">entropy_threshold</span><span class="cfg-val">3.5 bits (raw)</span></div>
+      <div class="cfg-row"><span class="cfg-key">dns_query_count_threshold</span><span class="cfg-val">3 queries</span></div>
+      <div class="cfg-row"><span class="cfg-key">dns_time_window</span><span class="cfg-val">30 seconds</span></div>
+      <div class="cfg-row"><span class="cfg-key">bpf_filter</span><span class="cfg-val">icmp or udp port 53</span></div>
+      <div class="cfg-row"><span class="cfg-key">suspicious_labels</span><span class="cfg-val">covertchannel, tunnel…</span></div>
+      <div class="cfg-row"><span class="cfg-key">show_decoded_payload</span><span class="cfg-val c-green">true</span></div>
+    </div>
+  </div>
+
+</div>
+
+</div><!-- end #app -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<script>
+// ── Parse real log format from your alerts.log ────────────────────────────
+// Format: [TIMESTAMP] [SEVERITY] PROTO | SRC -> DST | Reason | Details | DECODED: "msg"
+const RAW_LOGS = `
+[SESSION START] 2026-04-19 06:42:06
+[2026-04-19 06:42:06] [ALERT   ] ICMP | 192.168.1.5     -> 192.168.1.1     | Test alert | detail=xyz | DECODED: "HELLO"
+[2026-04-19 06:42:06] [WARNING ] DNS  | 10.0.0.5        -> 8.8.8.8         | Suspicious domain | domain=covertchannel.xyz
+[SESSION END] 2026-04-19 06:42:06
+`;
+
+function parseLogLine(line) {
+  // Match: [TIMESTAMP] [SEVERITY] PROTO | SRC -> DST | ...
+  const m = line.match(/^\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\]\s+\[(\w+)\s*\]\s+(\w+)\s+\|\s+([\d\.]+)\s*->\s+([\d\.]+)\s+\|\s+(.*)$/);
+  if (!m) return null;
+  const [,ts,sev,proto,src,dst,rest] = m;
+  // Parse decoded
+  const decodedMatch = rest.match(/DECODED:\s+"([^"]+)"/);
+  const decoded = decodedMatch ? decodedMatch[1] : '';
+  // Parse entropy from details
+  const entMatch = rest.match(/Entropy=([\d\.]+)bits/);
+  const entropy = entMatch ? parseFloat(entMatch[1]) : null;
+  // Parse payload len
+  const plMatch = rest.match(/PayloadLen=(\d+)B/);
+  const payloadLen = plMatch ? parseInt(plMatch[1]) : null;
+  // Reason = first segment before |
+  const reason = rest.split('|')[0].trim();
+  return { ts, sev:sev.trim(), proto:proto.trim(), src:src.trim(), dst:dst.trim(), reason, decoded, entropy, payloadLen, raw:line };
+}
+
+// ── Augment with realistic simulated logs matching your detection engine ──
+function genSimLogs() {
+  const logs = [];
+  const now = new Date(2026,3,19,6,42,6);
+  const scenarios = [
+    // ICMP 0xBEEF signature — your primary check
+    {sev:'ALERT',proto:'ICMP',src:'192.168.1.5',dst:'192.168.1.1',reason:'ICMP Covert Channel — Attacker Signature Detected',details:'ICMP_ID=0xBEEF | Seq=0 | PayloadLen=24B | Entropy=4.21bits',decoded:'HELLO_WORLD',entropy:4.21,payloadLen:24},
+    {sev:'ALERT',proto:'ICMP',src:'10.0.0.42',dst:'10.0.0.1',reason:'ICMP Covert Channel — Attacker Signature Detected',details:'ICMP_ID=0xBEEF | Seq=1 | PayloadLen=32B | Entropy=4.87bits',decoded:'EXFILTRATED_DATA',entropy:4.87,payloadLen:32},
+    {sev:'ALERT',proto:'ICMP',src:'192.168.0.99',dst:'8.8.8.8',reason:'ICMP Covert Channel — Attacker Signature Detected',details:'ICMP_ID=0xBEEF | Seq=0 | PayloadLen=28B | Entropy=4.52bits',decoded:'SECRET_MSG',entropy:4.52,payloadLen:28},
+    // Large encoded payload
+    {sev:'ALERT',proto:'ICMP',src:'172.16.0.5',dst:'172.16.0.1',reason:'ICMP Covert Channel — Large Encoded Payload Detected',details:'PayloadLen=48B | Entropy=5.10bits | B64ratio=0.97 | ICMP_ID=0x1234 | Seq=2',decoded:'TRANSFER_COMPLETE',entropy:5.10,payloadLen:48},
+    {sev:'WARNING',proto:'ICMP',src:'192.168.1.20',dst:'192.168.1.1',reason:'ICMP — Unusually Large Payload (Possible Covert Channel)',details:'PayloadLen=36B | Entropy=2.90bits | B64ratio=0.61 | ICMP_ID=0x4321',decoded:'',entropy:2.90,payloadLen:36},
+    // DNS keyword check
+    {sev:'ALERT',proto:'DNS',src:'10.0.0.5',dst:'8.8.8.8',reason:"DNS Tunneling — Suspicious Domain Keyword 'covertchannel'",details:"Domain=SEVMTE8-.covertchannel.xyz | MatchedKeyword='covertchannel' | Label='covertchannel'",decoded:'',entropy:null,payloadLen:null},
+    {sev:'ALERT',proto:'DNS',src:'10.0.0.5',dst:'8.8.8.8',reason:"DNS Tunneling — Suspicious Domain Keyword 'tunnel'",details:"Domain=data.tunnel.io | MatchedKeyword='tunnel' | Label='tunnel'",decoded:'',entropy:null,payloadLen:null},
+    // DNS encoded subdomain check
+    {sev:'ALERT',proto:'DNS',src:'10.0.0.5',dst:'8.8.8.8',reason:'DNS Tunneling — Encoded Subdomain Detected',details:"Domain=SEVMTE8-.covertchannel.xyz | Label='SEVMTE8-' | B64ratio=0.99 | Entropy=3.84bits",decoded:'HELLO-',entropy:3.84,payloadLen:null},
+    {sev:'ALERT',proto:'DNS',src:'192.168.1.10',dst:'1.1.1.1',reason:'DNS Tunneling — Encoded Subdomain Detected',details:"Domain=RVhGSUw=.exfil.net | Label='RVhGSUw=' | B64ratio=0.98 | Entropy=4.02bits",decoded:'EXFIL',entropy:4.02,payloadLen:null},
+    // DNS frequency check
+    {sev:'ALERT',proto:'DNS',src:'10.0.0.5',dst:'8.8.8.8',reason:'DNS Tunneling — High Query Frequency (5 queries/30s)',details:'Domain=covertchannel.xyz | Queries=5 in 30s | LastQuery=SEVMTE8-.covertchannel.xyz',decoded:'',entropy:null,payloadLen:null},
+    {sev:'ALERT',proto:'DNS',src:'10.0.0.12',dst:'8.8.8.8',reason:'DNS Tunneling — High Query Frequency (4 queries/30s)',details:'Domain=tunnel.io | Queries=4 in 30s | LastQuery=data.tunnel.io',decoded:'',entropy:null,payloadLen:null},
+    // Smaller encoded ICMP
+    {sev:'ALERT',proto:'ICMP',src:'192.168.2.7',dst:'192.168.2.1',reason:'ICMP — Encoded Payload Detected (Possible Covert Channel)',details:'Entropy=4.33bits | B64ratio=0.96 | PayloadLen=18B | ICMP_ID=0xABCD',decoded:'CMD_EXEC',entropy:4.33,payloadLen:18},
+    {sev:'WARNING',proto:'DNS',src:'10.0.0.8',dst:'8.8.8.8',reason:'DNS — Large TXT Record Response (Possible C2)',details:'Domain=update.svc.local | TXTLen=256B',decoded:'',entropy:null,payloadLen:null},
+    {sev:'ALERT',proto:'ICMP',src:'10.10.0.3',dst:'10.10.0.1',reason:'ICMP Covert Channel — Attacker Signature Detected',details:'ICMP_ID=0xBEEF | Seq=3 | PayloadLen=32B | Entropy=4.71bits',decoded:'HELLO_COVERT',entropy:4.71,payloadLen:32},
+    {sev:'INFO',proto:'ICMP',src:'127.0.0.1',dst:'127.0.0.1',reason:'PKT — Packet captured',details:'Proto=1',decoded:'',entropy:null,payloadLen:null},
+  ];
+
+  scenarios.forEach((s,i)=>{
+    const d = new Date(now.getTime() + i*1800*1000 + Math.random()*600000);
+    const pad = n=>String(n).padStart(2,'0');
+    const ts = `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+    logs.push({ts, tsRaw:d.getTime(), sev:s.sev, proto:s.proto, src:s.src, dst:s.dst, reason:s.reason, decoded:s.decoded||'', entropy:s.entropy, payloadLen:s.payloadLen, raw:''});
+  });
+  return logs;
+}
+
+// Parse real log entries + add simulated
+let ALL_LOGS = [];
+RAW_LOGS.split('\n').forEach(line=>{
+  const p = parseLogLine(line.trim());
+  if(p) ALL_LOGS.push({...p, tsRaw:new Date(p.ts).getTime()});
+});
+ALL_LOGS = [...ALL_LOGS, ...genSimLogs()].sort((a,b)=>b.tsRaw-a.tsRaw);
+
+let filtered = [...ALL_LOGS], sortKey='tsRaw', sortAsc=false, page=0;
+const PER = 10;
+
+// ── Metrics ──
+function updateMetrics(){
+  const icmpAlerts = ALL_LOGS.filter(l=>l.proto==='ICMP'&&l.sev==='ALERT').length;
+  const dnsAlerts  = ALL_LOGS.filter(l=>l.proto==='DNS'&&l.sev==='ALERT').length;
+  const total      = ALL_LOGS.filter(l=>l.sev==='ALERT'||l.sev==='CRITICAL').length;
+  const highEnt    = ALL_LOGS.filter(l=>l.entropy&&l.entropy>3.5).length;
+  const decoded    = ALL_LOGS.filter(l=>l.decoded&&l.decoded.length>0).length;
+  animate('m-icmp',icmpAlerts);
+  animate('m-dns',dnsAlerts);
+  animate('m-total',total);
+  animate('m-entropy',highEnt);
+  animate('m-decoded',decoded);
+  document.getElementById('log-count').textContent = ALL_LOGS.length+' entries';
+  document.getElementById('feed-count').textContent = (ALL_LOGS.filter(l=>l.sev==='ALERT'||l.sev==='CRITICAL').length)+' alerts';
+}
+function animate(id,target){
+  const el=document.getElementById(id);
+  const cur=parseInt(el.textContent)||0;
+  let v=cur; const step=Math.max(1,Math.round((target-cur)/12));
+  const t=setInterval(()=>{v=Math.min(v+step,target);el.textContent=v;if(v>=target)clearInterval(t);},40);
+}
+
+// ── Alert feed ──
+function buildFeed(){
+  const feed = document.getElementById('alertFeed');
+  feed.innerHTML='';
+  const alerts = ALL_LOGS.filter(l=>l.sev==='ALERT'||l.sev==='CRITICAL'||l.sev==='WARNING').slice(0,12);
+  alerts.forEach(a=>{
+    const cls = 'sev-'+a.sev.toLowerCase();
+    const el=document.createElement('div');
+    el.className='alert-item '+cls;
+    const pCls='proto-'+(a.proto.toLowerCase());
+    el.innerHTML=`
+      <div class="ai-header">
+        <span class="sev-tag ${cls}">${a.sev}</span>&nbsp;<span class="proto-tag ${pCls}">${a.proto}</span>
+        <span class="ai-time">${a.ts.split(' ')[1]||a.ts}</span>
+      </div>
+      <div class="ai-reason">${a.reason}</div>
+      <div class="ai-route">${a.src} → ${a.dst}</div>
+      ${a.decoded?`<div class="ai-decoded">▶ DECODED: "${a.decoded}"</div>`:''}
+    `;
+    feed.appendChild(el);
+  });
+}
+
+// ── Entropy list ──
+function buildEntropyList(){
+  const el=document.getElementById('entropyList');
+  el.innerHTML='';
+  const withEnt=ALL_LOGS.filter(l=>l.entropy!=null).sort((a,b)=>b.entropy-a.entropy).slice(0,8);
+  withEnt.forEach(l=>{
+    const pct=Math.min(100,(l.entropy/8)*100);
+    const col=l.entropy>5?'var(--red)':l.entropy>3.5?'var(--amber)':'var(--blue)';
+    el.innerHTML+=`<div class="ent-row">
+      <span class="ent-label">${l.src}</span>
+      <div class="ent-bar-bg"><div class="ent-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+      <span class="ent-val">${l.entropy.toFixed(2)}</span>
+    </div>`;
+  });
+  if(!withEnt.length) el.innerHTML='<div style="font-family:var(--mono);font-size:11px;color:var(--hint);text-align:center;padding:20px">No entropy data yet</div>';
+}
+
+// ── Detection checks ──
+function buildChecks(){
+  const el=document.getElementById('checksGrid');
+  const checks=[
+    {name:'0xBEEF ID',val:ALL_LOGS.filter(l=>l.reason.includes('Signature')).length,col:'var(--red)',sub:'ICMP ID fingerprint'},
+    {name:'Large Payload',val:ALL_LOGS.filter(l=>l.reason.includes('Large')).length,col:'var(--amber)',sub:'> 20 bytes threshold'},
+    {name:'High Entropy',val:ALL_LOGS.filter(l=>l.entropy&&l.entropy>3.5).length,col:'var(--purple)',sub:'> 3.5 bits raw'},
+    {name:'DNS Keyword',val:ALL_LOGS.filter(l=>l.reason.includes('Keyword')).length,col:'var(--teal)',sub:'covertchannel etc.'},
+    {name:'Enc. Subdomain',val:ALL_LOGS.filter(l=>l.reason.includes('Subdomain')).length,col:'var(--blue)',sub:'base64 label ratio'},
+    {name:'DNS Frequency',val:ALL_LOGS.filter(l=>l.reason.includes('Frequency')).length,col:'var(--amber)',sub:'≥3 queries/30s'},
+  ];
+  el.innerHTML=checks.map(c=>`<div class="check-item">
+    <div class="check-name">${c.name}</div>
+    <div class="check-val" style="color:${c.col}">${c.val}</div>
+    <div class="check-sub">${c.sub}</div>
+  </div>`).join('');
+}
+
+// ── Table ──
+function renderTable(){
+  const body=document.getElementById('logBody');
+  const start=page*PER, end=Math.min(start+PER,filtered.length);
+  body.innerHTML='';
+  document.getElementById('no-results').style.display=filtered.length?'none':'block';
+  filtered.slice(start,end).forEach(l=>{
+    const sc='sev-'+l.sev.toLowerCase();
+    const pc='proto-'+l.proto.toLowerCase();
+    const tr=document.createElement('tr');
+    tr.innerHTML=`
+      <td>${l.ts.split(' ')[1]||l.ts}</td>
+      <td><span class="sev-tag ${sc}">${l.sev}</span></td>
+      <td><span class="proto-tag ${pc}">${l.proto}</span></td>
+      <td>${l.src}</td>
+      <td>${l.dst}</td>
+      <td class="detail-cell" title="${l.reason}">${l.reason}</td>
+      <td class="decoded-cell" title="${l.decoded}">${l.decoded||'—'}</td>
+    `;
+    body.appendChild(tr);
+  });
+  document.getElementById('pag-info').textContent=`${start+1}–${end} of ${filtered.length}`;
+  renderPag();
+}
+
+function renderPag(){
+  const total=Math.ceil(filtered.length/PER);
+  const el=document.getElementById('pagBtns');
+  el.innerHTML='';
+  const add=(lbl,pg,active)=>{const b=document.createElement('button');b.className='pag-btn'+(active?' active':'');b.textContent=lbl;b.onclick=()=>{page=pg;renderTable();};el.appendChild(b);};
+  add('‹',Math.max(0,page-1));
+  const s=Math.max(0,page-2),e=Math.min(total,s+5);
+  for(let i=s;i<e;i++)add(i+1,i,i===page);
+  add('›',Math.min(total-1,page+1));
+}
+
+function applyFilters(){
+  const q=document.getElementById('searchInput').value.toLowerCase().trim();
+  const sev=document.getElementById('filtSev').value;
+  const proto=document.getElementById('filtProto').value;
+  const reason=document.getElementById('filtReason').value;
+  filtered=ALL_LOGS.filter(l=>{
+    if(sev&&l.sev!==sev)return false;
+    if(proto&&l.proto!==proto)return false;
+    if(reason&&!l.reason.includes(reason))return false;
+    if(q&&!(l.src.includes(q)||l.dst.includes(q)||l.reason.toLowerCase().includes(q)||(l.decoded||'').toLowerCase().includes(q)))return false;
+    return true;
+  });
+  page=0;renderTable();
+}
+function clearFilters(){
+  document.getElementById('searchInput').value='';
+  document.getElementById('filtSev').value='';
+  document.getElementById('filtProto').value='';
+  document.getElementById('filtReason').value='';
+  filtered=[...ALL_LOGS];page=0;renderTable();
+}
+function sortBy(k){
+  if(sortKey===k)sortAsc=!sortAsc; else{sortKey=k;sortAsc=false;}
+  const d=sortAsc?1:-1;
+  filtered.sort((a,b)=>{const av=String(a[k]||''),bv=String(b[k]||'');return av<bv?-d:av>bv?d:0;});
+  renderTable();
+}
+
+document.getElementById('searchInput').addEventListener('keydown',e=>{if(e.key==='Enter')applyFilters();});
+
+// ── Clock ──
+function tick(){const n=new Date();document.getElementById('clock').textContent=`${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')}`;}
+tick();setInterval(tick,1000);
+
+// ── Boot ──
+updateMetrics();
+buildFeed();
+buildEntropyList();
+buildChecks();
+renderTable();
+
+// ── Simulate a new alert arriving every ~8s ──
+const simAlerts=[
+  {sev:'ALERT',proto:'ICMP',src:'10.20.0.'+Math.floor(Math.random()*254+1),dst:'10.0.0.1',reason:'ICMP Covert Channel — Attacker Signature Detected',decoded:'NEW_CMD',entropy:4.62,payloadLen:28},
+  {sev:'ALERT',proto:'DNS',src:'192.168.3.5',dst:'8.8.8.8',reason:'DNS Tunneling — Encoded Subdomain Detected',decoded:'PING',entropy:3.91,payloadLen:null},
+  {sev:'WARNING',proto:'ICMP',src:'172.31.0.9',dst:'172.31.0.1',reason:'ICMP — Unusually Large Payload (Possible Covert Channel)',decoded:'',entropy:2.7,payloadLen:40},
+];
+let simIdx=0;
+setInterval(()=>{
+  const s=simAlerts[simIdx%simAlerts.length]; simIdx++;
+  const n=new Date(); const pad=v=>String(v).padStart(2,'0');
+  const ts=`${n.getFullYear()}-${pad(n.getMonth()+1)}-${pad(n.getDate())} ${pad(n.getHours())}:${pad(n.getMinutes())}:${pad(n.getSeconds())}`;
+  const entry={...s,ts,tsRaw:n.getTime(),src:s.src||'10.'+Math.floor(Math.random()*255)+'.0.'+Math.floor(Math.random()*254+1),raw:''};
+  ALL_LOGS.unshift(entry);
+  filtered=[...ALL_LOGS];
+  updateMetrics();buildFeed();buildEntropyList();buildChecks();renderTable();
+},8000);
+</script>
+</body>
+</html>

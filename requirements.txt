@@ -1,0 +1,15 @@
+# requirements.txt
+# Real-Time Covert Channel Detection System
+# Install all dependencies with: pip install -r requirements.txt
+
+# Core packet capture and crafting library
+scapy>=2.5.0
+
+# YAML configuration file support
+pyyaml>=6.0
+
+# Flask web dashboard server
+flask>=2.2.0
+
+# All other dependencies (math, base64, threading, collections, signal, argparse)
+# are part of the Python standard library and require no installation.
